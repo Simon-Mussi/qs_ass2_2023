@@ -95,7 +95,9 @@ object MessageBoardSpecification extends Commands {
 
       else if (num_reports >USER_BLOCKED_AT_COUNT) return state.copy(lastCommandSuccessful = false, userBanned = true)
 
-      // R3 -> saving messages = irrelavant TODO do I need this here as well?
+      // R3 -> saving messages
+      val index_eq_msg = state.messages.indexWhere(mes => mes.message == message)
+      else if(index_eq_msg != -1) return state.copy(lastCommandSuccessful = false)
 
 
       // R4 -> like/dislike
@@ -137,8 +139,6 @@ object MessageBoardSpecification extends Commands {
          */
         //if(reply == newState) true
         if(reply.isInstanceOf[OperationAck] && newState.lastCommandSuccessful)  true
-        // TODO can it still be userBanned or would isSuccess be false then
-        else if(reply.isInstanceOf[UserBanned] && newState.userBanned)  true
         else false
       } else {
         false
@@ -291,17 +291,51 @@ object MessageBoardSpecification extends Commands {
   // just a suggestion, change it according to your needs.
   case class RetrieveCommandResult(success: Boolean, messages: List[String])
 
+  /*
+  (UserMessage.toString()) and in the model
+  (ModelUserMessage.toString()) to compare the individual messages.
+   */
+
   case class RetrieveCommand(author: String) extends Command {
     type Result = RetrieveCommandResult
 
     def run(sut: Sut): Result = {
       // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new RetrieveMessages(author, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val notSuccessful = res.messages.isEmpty()
+      val messages = {
+        if(notSuccessful) Nil
+        else res.messages.asScala.map(m => m.getMessage).toList
+      }
+
+      val res1 = RetrieveCommandResult(!notSuccessful, messages)
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
       // TODO
-      state
+      // R6 It should be possible to retrieve a list of all existing messages of an author.
+      // could not find anything to search for
+      state.copy(lastCommandSuccessful = true)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -309,7 +343,17 @@ object MessageBoardSpecification extends Commands {
     override def postCondition(state: State, result: Try[Result]): Prop = {
       if (result.isSuccess) {
         val reply: Result = result.get
-        false // TODO
+        // TODO
+        if(reply.success) {
+          val newState: State = nextState(state)
+          val msges = newState.messages.filter(m => m.author == author).map(m => m.message)
+          val model_msges = reply.messages
+
+          if(msges == model_msges) true //TODO is this enough/does it work good enough
+        }
+        else {
+          false
+        }
       } else {
         false
       }
