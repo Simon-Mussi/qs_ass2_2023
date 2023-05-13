@@ -45,12 +45,82 @@ object MessageBoardSpecification extends Commands {
 
     def run(sut: Sut): Result = {
       // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      /*
+      Here you execute the command on the System-Under-Test. You should return a result that
+      can be checked in the post-condition. We already suggested result types, but you are allowed
+      to change them.
+       */
+      /* from MessageBoardProperties
+      val sut = new SUTMessageBoard
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty)
+        sut.getSystem.runFor(1)
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+       */
+
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while(sut.getClient.receivedMessages.isEmpty){
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new Publish(new UserMessage(author, message), sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove()
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+      res
     }
 
     def nextState(state: State): State = {
       // TODO
-      state
+      /*
+      Here you execute the command on the model. Please pay attention: The model has to be
+      immutable. You cannot modify the variables of the model directly; instead, you need to use
+      copy() to return a modified instance.
+       */
+      //R1 less than or exactly
+      if(message.length > MAX_MESSAGE_LENGTH) return state.copy(lastCommandSuccessful = false)
+
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+
+      else if (num_reports >USER_BLOCKED_AT_COUNT) return state.copy(lastCommandSuccessful = false, userBanned = true)
+
+      // R3 -> saving messages = irrelavant TODO do I need this here as well?
+
+
+      // R4 -> like/dislike
+      // R5 -> like/dislike
+      // R6 -> get a list of all possible messages
+      // R7 -> search for messages
+      // R8 -> reporting
+      // R9 -> unsuccessful requests
+      // R10 -> handling of unsuccessful requests
+      // R11 -> handling of likes/dislikes
+      // R12 -> remove of a like
+      // R13 -> like/dislike
+      // R14 -> reactions
+      // R15 -> edit
+      // R16 -> edit
+      // R17 -> deleting
+
+      // => no other requirement is relevant, meaning if those two did not catch
+      // smth it is true
+
+      val messages = ModelUserMessage(author, message, Nil, Nil, collection.mutable.Map(), 0) :: state.messages
+      state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
+
+
+      //state
     }
 
     override def preCondition(state: State): Boolean = true
@@ -59,7 +129,17 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        false // TODO
+        // TODO
+        /*
+        Here you need to check if the behaviour of the SUT and the model is the same. Please pay attention:
+        The state passed as the argument is the state before the invocation of nextState(),
+        so you need to use nextState(state) to get the actual model after processing the command.
+         */
+        //if(reply == newState) true
+        if(reply.isInstanceOf[OperationAck] && newState.lastCommandSuccessful)  true
+        // TODO can it still be userBanned or would isSuccess be false then
+        else if(reply.isInstanceOf[UserBanned] && newState.userBanned)  true
+        else false
       } else {
         false
       }
