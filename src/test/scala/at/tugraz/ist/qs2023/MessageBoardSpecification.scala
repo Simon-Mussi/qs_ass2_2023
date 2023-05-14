@@ -88,16 +88,22 @@ object MessageBoardSpecification extends Commands {
       copy() to return a modified instance.
        */
       //R1 less than or exactly
-      if(message.length > MAX_MESSAGE_LENGTH) return state.copy(lastCommandSuccessful = false)
+      if(message.length > MAX_MESSAGE_LENGTH) {
+          return state.copy(lastCommandSuccessful = false)
+      }
 
       //R2 more than USER BLOCKED AT COUNT (=5)
       val num_reports = state.reports.count(report => report.reportedClientName == author)
 
-      else if (num_reports >USER_BLOCKED_AT_COUNT) return state.copy(lastCommandSuccessful = false, userBanned = true)
+      if (num_reports >USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
 
       // R3 -> saving messages
       val index_eq_msg = state.messages.indexWhere(mes => mes.message == message)
-      else if(index_eq_msg != -1) return state.copy(lastCommandSuccessful = false)
+      if(index_eq_msg != -1) {
+        return state.copy(lastCommandSuccessful = false)
+      }
 
 
       // R4 -> like/dislike
@@ -350,6 +356,7 @@ object MessageBoardSpecification extends Commands {
           val model_msges = reply.messages
 
           if(msges == model_msges) true //TODO is this enough/does it work good enough
+          else false
         }
         else {
           false
