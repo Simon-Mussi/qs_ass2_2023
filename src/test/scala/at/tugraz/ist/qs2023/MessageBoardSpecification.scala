@@ -40,6 +40,13 @@ object MessageBoardSpecification extends Commands {
     message <- genMessage
   } yield PublishCommand(author, message)
 
+  //TODO general questions:
+  // - where do I need to implement the restrictions??
+  //   in the nextState, in the postCondition or i both?
+  // _
+  // general -> always edit run, nextState and postCondition
+
+
   case class PublishCommand(author: String, message: String) extends Command {
     type Result = Message
 
@@ -111,8 +118,8 @@ object MessageBoardSpecification extends Commands {
       // R6 -> get a list of all possible messages
       // R7 -> search for messages
       // R8 -> reporting
-      // R9 -> unsuccessful requests
-      // R10 -> handling of unsuccessful requests
+      // R9 -> unsuccessful requests //TODO
+      // R10 -> handling of unsuccessful requests // TODO implement this here
       // R11 -> handling of likes/dislikes
       // R12 -> remove of a like
       // R13 -> like/dislike
@@ -199,8 +206,34 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new RetrieveMessages(message, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val msgID = res.messages.asScala.find(msg => msg.getMessage == message).orNull.getMessageId
+
+      worker.tell(new Like(message, sut.getCommId, msgID))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res1 = sut.getClient.receivedMessages.remove() //.asInstanceOf[FoundMessages]
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
@@ -214,7 +247,7 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        false // TODO
+        false // TODO !!! impl right rule
       } else {
         false
       }
@@ -339,8 +372,7 @@ object MessageBoardSpecification extends Commands {
 
     def nextState(state: State): State = {
       // TODO
-      // R6 It should be possible to retrieve a list of all existing messages of an author.
-      // could not find anything to search for
+
       state.copy(lastCommandSuccessful = true)
     }
 
@@ -354,6 +386,8 @@ object MessageBoardSpecification extends Commands {
           val newState: State = nextState(state)
           val msges = newState.messages.filter(m => m.author == author).map(m => m.message)
           val model_msges = reply.messages
+          // R6 It should be possible to retrieve a list of all existing messages of an author.
+          // could not find anything to search for
 
           if(msges == model_msges) true //TODO is this enough/does it work good enough
           else false
@@ -379,21 +413,59 @@ object MessageBoardSpecification extends Commands {
     type Result = SearchCommandResult
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new SearchMessages(searchText, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+  // TODO can I test this with author as well (from res.author)
+      val notSuccessful = res.messages.isEmpty()
+      val messages = {
+        if (notSuccessful) Nil
+        else res.messages.asScala.map(m => m.getMessage).toList
+      }
+
+      val res1 = SearchCommandResult(!notSuccessful, messages)
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      state.copy(lastCommandSuccessful = true)
     }
 
     override def preCondition(state: State): Boolean = true
 
     override def postCondition(state: State, result: Try[Result]): Prop = {
       if (result.isSuccess) {
+        /*
+        R7 It should be possible to search for messages containing a given text (case-insensitive) in the
+        message text itself or the author’s name and get back a list of those messages.
+        */
         val reply: Result = result.get
-        false // TODO
+
+        if (reply.success) {
+          val newState: State = nextState(state)
+          val msges = newState.messages.filter(m => m.message.contains(searchText)).map(m => m.message)
+          val model_msges = reply.messages
+
+          if(msges == model_msges) true
+          else false
+        }
+        else false
       } else {
         false
       }
