@@ -100,7 +100,7 @@ object MessageBoardSpecification extends Commands {
       }
 
       // R3 -> saving messages
-      val index_eq_msg = state.messages.indexWhere(mes => mes.message == message)
+      val index_eq_msg = state.messages.indexWhere(mes => (mes.message == message) && (mes.author == author))
       if(index_eq_msg != -1) {
         return state.copy(lastCommandSuccessful = false)
       }
