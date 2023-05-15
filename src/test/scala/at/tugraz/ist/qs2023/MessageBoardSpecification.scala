@@ -175,7 +175,7 @@ object MessageBoardSpecification extends Commands {
       val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
       val worker: SimulatedActor = initAck.worker
 
-      worker.tell(new RetrieveMessages(message, sut.getCommId))
+      worker.tell(new RetrieveMessages(author, sut.getCommId))
       while (sut.getClient.receivedMessages.isEmpty) {
         sut.getSystem.runFor(1)
       }
@@ -214,7 +214,7 @@ object MessageBoardSpecification extends Commands {
       // R14 A message can get more than one reaction from a user, but all reactions to a message from
       // the same user should be different (set semantics).
       val equal_reaction_exists = state.messages.exists(m => ((m.message == message && m.author == author)
-        && m.reactions.exists(reaction => (reaction._1 == rName && reaction._2 == reactionType))))
+        && m.reactions.exists(reaction => (reaction._1 == rName && reaction._2.contains(reactionType)))))
       if(equal_reaction_exists) {
         return state.copy(lastCommandSuccessful = false)
       }
@@ -225,13 +225,13 @@ object MessageBoardSpecification extends Commands {
           if (msg.message == message && msg.author == author) {
             if(msg.reactions.get(rName) != null){
               val cloned_reactions = msg.reactions.clone()
-              val cloned_reactions_of_rName = msg.reactions(rName).clone()
-              // TODO!!!
-              cloned_reactions = cloned_reactions.put(rName, cloned_reactions_of_rName.clone() += reactionType)
+              cloned_reactions.put (rName, msg.reactions(rName).clone() += reactionType)
               msg.copy(reactions = cloned_reactions.clone())
             }
             else {
-              msg.copy( reactions = (msg.reactions.clone().put(rName, collection.mutable.Set[Reaction.Emoji](reactionType))))
+              val cloned_reaction = msg.reactions.clone()
+              cloned_reaction.put(rName, collection.mutable.Set[Reaction.Emoji](reactionType))
+              msg.copy( reactions = cloned_reaction.clone())
             }
           } else {
             msg
@@ -317,13 +317,12 @@ object MessageBoardSpecification extends Commands {
 
       val messages = state.messages.map (
         msg => {
-          // TODO continue whats the problem here??
           if(msg.message == message && msg.author == author){
             msg.copy(likes = msg.likes:+likeName,
                     points = msg.points + 2 )
           }
           else {
-            message
+            msg
           }
         }
       )
