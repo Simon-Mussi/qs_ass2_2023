@@ -483,7 +483,6 @@ object MessageBoardSpecification extends Commands {
       val reportsVal = ModelReport(reporter, reported)::state.reports
 
       state.copy(lastCommandSuccessful = true, userBanned = false, reports = reportsVal)
-      state
     }
 
     override def preCondition(state: State): Boolean = true
@@ -671,11 +670,20 @@ object MessageBoardSpecification extends Commands {
         return state.copy(lastCommandSuccessful = false, userBanned = true)
       }
 
-      // It is not possible to
-      //edit a message of a different author or edit a message to an already existing message
+      //R15 An author is unable to edit a message to have the
+      // same content as one of their existing messages
+      val msgFromAuthor = state.messages.find(msg => (msg.message == message && msg.author == author))
+      if (msgFromAuthor == None) {
+        return state.copy(lastCommandSuccessful = false)
+      }
 
-      //
-      state
+      //R16 Only the author of a message, who published it, is able to edit it.
+      val msgFromAuthor = state.messages.find(msg => (msg.message == message && msg.author == author))
+      if (msgFromAuthor == None) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      state.copy(lastCommandSuccessful = true, userBanned = false, reports = reportsVal)
     }
 
     override def preCondition(state: State): Boolean = true
