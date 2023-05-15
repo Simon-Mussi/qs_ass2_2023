@@ -672,13 +672,12 @@ object MessageBoardSpecification extends Commands {
 
       //R15 An author is unable to edit a message to have the
       // same content as one of their existing messages
-      val msgFromAuthor = state.messages.find(msg => (msg.message == message && msg.author == author))
-      if (msgFromAuthor == None) {
+      if (oldMessage == newMessage) {
         return state.copy(lastCommandSuccessful = false)
       }
 
       //R16 Only the author of a message, who published it, is able to edit it.
-      val msgFromAuthor = state.messages.find(msg => (msg.message == message && msg.author == author))
+      val msgFromAuthor = state.messages.find(msg => (msg.message == oldMessag && msg.author == author))
       if (msgFromAuthor == None) {
         return state.copy(lastCommandSuccessful = false)
       }
