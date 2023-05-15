@@ -728,6 +728,14 @@ object MessageBoardSpecification extends Commands {
         return state.copy(lastCommandSuccessful = false)
       }
 
+      val messages = state.messages.map(
+        msg => {
+          if(msg.message == oldMessage && msg.author == author)
+            msg.copy(message = newMessage)
+          else
+            msg
+        }
+      )
       state.copy(lastCommandSuccessful = true, userBanned = false)
     }
 
@@ -736,7 +744,11 @@ object MessageBoardSpecification extends Commands {
     override def postCondition(state: State, result: Try[Message]): Prop = {
       if (result.isSuccess) {
         val reply: Result = result.get
-        false // TODO
+        val newState: State = nextState(state)
+        if (reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
@@ -787,8 +799,38 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      // R12 If a like has been removed from a message, then two points should be removed from the
+      //message points counter. Else if a dislike has been removed from a message, then one point
+      //should be added to the message points counter.
+
+
+      // R13 A like/dislike may only be deleted if the message was liked/disliked by the same user before.
+      val already_liked = state.messages.exists(m => ((m.message == message) &&
+        m.likes.contains(author)))
+      if (!already_liked) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      val messages = state.messages.map(
+        msg => {
+          if (msg.message == message && msg.author == author) {
+            val likes = msg.likes.filter(auth => auth != author)
+            msg.copy(likes = likes,
+              points = msg.points + 2)
+          }
+          else {
+            msg
+          }
+        }
+      )
+      state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -796,7 +838,13 @@ object MessageBoardSpecification extends Commands {
     override def postCondition(state: State, result: Try[Message]): Prop = {
       if (result.isSuccess) {
         val reply: Result = result.get
-        false // TODO
+        val newState: State = nextState(state)
+        // f the system replies with ReactionResponse, the SUT
+        //was successful.
+        if (reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
@@ -846,8 +894,24 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      // R17 A message may only be deleted by its author and no other user.
+      val msgFromAuthor = state.messages.find(msg => (msg.message == message && msg.author == deletingUser))
+      if (msgFromAuthor == None) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      val messages = state.messages.filter(
+        msg => {
+          (msg.author != deletingUser && msg.message != message)
+        }
+      )
+      state.copy(lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -855,7 +919,11 @@ object MessageBoardSpecification extends Commands {
     override def postCondition(state: State, result: Try[Message]): Prop = {
       if (result.isSuccess) {
         val reply: Result = result.get
-        false // TODO
+        val newState: State = nextState(state)
+        if (reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
