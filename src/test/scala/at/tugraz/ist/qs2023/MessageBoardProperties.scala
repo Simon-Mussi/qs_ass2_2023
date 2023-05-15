@@ -98,15 +98,15 @@ class MessageBoardProperties extends Properties("MessageBoardProperties") {
       sut.getSystem.runFor(1)
     sut.getClient.receivedMessages.remove()
 
-    for (_ <- 1 to USER_BLOCKED_AT_COUNT + 1) {
-      worker.tell(new Report(author, sut.getCommId, "reporter"))
+    for (x <- 1 to USER_BLOCKED_AT_COUNT + 1) {
+      worker.tell(new Report("reporter".concat(x.toString), sut.getCommId, author))
       while (sut.getClient.receivedMessages.isEmpty)
         sut.getSystem.runFor(1)
       sut.getClient.receivedMessages.remove()
     }
 
     // act - try to publish another message
-    worker.tell(new Publish(new UserMessage(author, "new message"), sut.getCommId))
+    worker.tell(new Publish(new UserMessage(author, "message"), sut.getCommId))
     while (sut.getClient.receivedMessages.isEmpty)
       sut.getSystem.runFor(1)
     val reply = sut.getClient.receivedMessages.remove()
@@ -118,7 +118,7 @@ class MessageBoardProperties extends Properties("MessageBoardProperties") {
     sut.getClient.receivedMessages.remove.asInstanceOf[FinishAck]
 
     // assert - check if the publish operation failed
-    reply.isInstanceOf[OperationFailed]
+    reply.isInstanceOf[UserBanned]
   }
 
   property("report user not previously banned: Publish + Ack [R8]") = forAll(Gen.listOfN(2, Gen.alphaStr), Gen.listOfN(2, validMessageGen)) { (authors: List[String], messages: List[String]) =>
