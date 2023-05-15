@@ -247,9 +247,10 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        if(reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)  true
-
-        false
+        if(reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         val reply: Message = result.get
         //if(reply.isInstanceOf[OperationFailed] && !newState.lastCommandSuccessful)  true
