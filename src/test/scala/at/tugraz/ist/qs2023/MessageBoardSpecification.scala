@@ -302,6 +302,12 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
       // R4 In order to like/dislike edit, react to or delete a message, the message must exist.
       val exists = state.messages.exists(m => (m.message == message && m.author == author))
       if (!exists) {
@@ -339,7 +345,10 @@ object MessageBoardSpecification extends Commands {
         val newState: State = nextState(state)
         // f the system replies with ReactionResponse, the SUT
         //was successful.
-        false // TODO !!! impl right rule
+        if (reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
@@ -389,8 +398,41 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      //R4
+      val exists = state.messages.exists(m => (m.message == message && m.author == author))
+      if (!exists) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      // R5 A message may only be liked/disliked by users who have not yet liked/disliked the correspon-
+      //ding message.
+      val already_liked = state.messages.exists(m => ((m.message == message) &&
+        m.likes.contains(dislikeName)))
+      if (already_liked) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      val messages = state.messages.map(
+        msg => {
+          if (msg.message == message && msg.author == author) {
+            msg.copy(dislikes = msg.dislikes :+ dislikeName,
+              points = msg.points - 1)
+          }
+          else {
+            msg
+          }
+        }
+      )
+
+      state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -399,7 +441,10 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        false // TODO
+        if (reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
@@ -441,8 +486,22 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName)
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      // R8 A user may report another user only if they have not previously reported the user in question.
+      val alreadyReported = state.reports.find(rep => rep.clientName == reporter && rep.reportedClientName == reported)
+      if(alreadyReported != None){
+        return state.copy(lastCommandSuccessful = false)
+
+      }
+
+      val reportsVal = ModelReport(reporter, reported)::state.reports
+
+      state.copy(lastCommandSuccessful = true, userBanned = false, reports = reportsVal)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -451,7 +510,10 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        false // TODO
+        if (reply.isInstanceOf[OperationAck] && newState.lastCommandSuccessful)
+          true
+        else
+          false
       } else {
         false
       }
@@ -476,7 +538,6 @@ object MessageBoardSpecification extends Commands {
     type Result = RetrieveCommandResult
 
     def run(sut: Sut): Result = {
-      // TODO
       sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
       while (sut.getClient.receivedMessages.isEmpty) {
         sut.getSystem.runFor(1)
@@ -508,8 +569,6 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-
       state.copy(lastCommandSuccessful = true)
     }
 
@@ -518,14 +577,12 @@ object MessageBoardSpecification extends Commands {
     override def postCondition(state: State, result: Try[Result]): Prop = {
       if (result.isSuccess) {
         val reply: Result = result.get
-        // TODO
         if(reply.success) {
           val newState: State = nextState(state)
           val msges = newState.messages.filter(m => m.author == author).map(m => m.message)
           val model_msges = reply.messages
           // R6 It should be possible to retrieve a list of all existing messages of an author.
           // could not find anything to search for
-
           if(msges == model_msges) true //TODO is this enough/does it work good enough
           else false
         }
@@ -653,8 +710,25 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName)
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      //R15 An author is unable to edit a message to have the
+      // same content as one of their existing messages
+      if (oldMessage == newMessage) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      //R16 Only the author of a message, who published it, is able to edit it.
+      val msgFromAuthor = state.messages.find(msg => (msg.message == oldMessag && msg.author == author))
+      if (msgFromAuthor == None) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      state.copy(lastCommandSuccessful = true, userBanned = false, reports = reportsVal)
     }
 
     override def preCondition(state: State): Boolean = true
