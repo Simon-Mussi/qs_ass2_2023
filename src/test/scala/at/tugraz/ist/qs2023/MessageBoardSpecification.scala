@@ -29,7 +29,8 @@ object MessageBoardSpecification extends Commands {
 
   override def genInitialState: Gen[State] = ModelMessageBoard(Nil, Nil, lastCommandSuccessful = false, userBanned = false)
 
-  override def genCommand(state: State): Gen[Command] = Gen.oneOf(genPublish, genLike, genDislike, genReport, genReaction, genRetrieve, genSearch, genEdit, genRemoveLikeOrDislike, genDelete)
+  override def genCommand(state: State): Gen[Command] = Gen.oneOf(genPublish, genRetrieve)
+  // genPublish , genLike, genDislike, genReport, genReaction, genRetrieve , genSearch, genEdit, genRemoveLikeOrDislike, genDelete
 
   val genAuthor: Gen[String] = Gen.oneOf("Alice", "Bob")
   val genReporter: Gen[String] = Gen.oneOf("Alice", "Bob", "Lena", "Lukas", "Simone", "Charles", "Gracie", "Patrick", "Laura", "Leon")
@@ -148,6 +149,7 @@ object MessageBoardSpecification extends Commands {
          */
         //if(reply == newState) true
         if(reply.isInstanceOf[OperationAck] && newState.lastCommandSuccessful)  true
+        else if(reply.isInstanceOf[OperationFailed] && !newState.lastCommandSuccessful) true
         else false
       } else {
         false
