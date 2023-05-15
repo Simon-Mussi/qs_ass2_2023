@@ -1,0 +1,750 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.scalacheck.PropFromFun" tests="19" skipped="0" failures="0" errors="0" timestamp="2023-05-15T10:27:13" hostname="BEOMUS" time="0.636">
+  <properties/>
+  <testcase name="MessageBoardProperties.message length: Publish + Ack [R1]" classname="org.scalacheck.PropFromFun" time="0.155"/>
+  <testcase name="MessageBoardProperties.Message length: Edit + Ack [R1] " classname="org.scalacheck.PropFromFun" time="0.04"/>
+  <testcase name="MessageBoardProperties.user blocked after USER_BLOCKED_AT_COUNT reports: Publish + Ack [R2]" classname="org.scalacheck.PropFromFun" time="0.083"/>
+  <testcase name="MessageBoardProperties.report user not previously banned: Publish + Ack [R8]" classname="org.scalacheck.PropFromFun" time="0.059"/>
+  <testcase name="MessageBoardProperties.no identical messages: Publish + Ack [R3]" classname="org.scalacheck.PropFromFun" time="0.012"/>
+  <testcase name="MessageBoardProperties.operation on non-existent message:  Publish + Ack [R4]" classname="org.scalacheck.PropFromFun" time="0.044"/>
+  <testcase name="MessageBoardProperties.message liked/disliked once: Like/Dislike + Ack [R5]" classname="org.scalacheck.PropFromFun" time="0.018"/>
+  <testcase name="MessageBoardProperties.retrieve all messages of an author: GetAuthorMessages + Ack [R6]" classname="org.scalacheck.PropFromFun" time="0.022"/>
+  <testcase name="MessageBoardProperties.search for messages containing a given text: SearchMessages + Ack [R7]" classname="org.scalacheck.PropFromFun" time="0.025"/>
+  <testcase name="MessageBoardProperties.report user only once: Report + Ack [R8]" classname="org.scalacheck.PropFromFun" time="0.021"/>
+  <testcase name="MessageBoardProperties.successful requests receive OperationAck or ReactionResponse [R9]" classname="org.scalacheck.PropFromFun" time="0.024"/>
+  <testcase name="MessageBoardProperties.ban user: Publish + Ack [R10]" classname="org.scalacheck.PropFromFun" time="0.054"/>
+  <testcase name="MessageBoardProperties.likes add two points, dislikes remove one point [R11]" classname="org.scalacheck.PropFromFun" time="0.009"/>
+  <testcase name="MessageBoardProperties.removing like decreases two points, removing dislike increases one point [R12]" classname="org.scalacheck.PropFromFun" time="0.005"/>
+  <testcase name="MessageBoardProperties.like/dislike can only be removed by the same user [R13]" classname="org.scalacheck.PropFromFun" time="0.015"/>
+  <testcase name="MessageBoardProperties.all reactions from a user must be different [R14]" classname="org.scalacheck.PropFromFun" time="0.017"/>
+  <testcase name="MessageBoardProperties.an author cannot edit a message to duplicate content [R15]" classname="org.scalacheck.PropFromFun" time="0.008"/>
+  <testcase name="MessageBoardProperties.only the author of a message is able to edit it [R16]" classname="org.scalacheck.PropFromFun" time="0.008"/>
+  <testcase name="MessageBoardProperties.only the author of a message is able to delete it [R17]" classname="org.scalacheck.PropFromFun" time="0.011"/>
+  <system-out><![CDATA[+ OK, passed 100 tests.
+> Collected test data: 
+64% invalid message length
+36% valid message length
++ OK, passed 100 tests.
+> Collected test data: 
+64% invalid message length
+36% valid message length
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
+true
+true
+true
+true
+true
+true
+class at.tugraz.ist.qs2023.messageboard.clientmessages.UserBanned
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
++ OK, passed 100 tests.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
