@@ -8,6 +8,7 @@ import at.tugraz.ist.qs2023.messageboard.clientmessages._
 import org.scalacheck.commands.Commands
 import org.scalacheck.{Gen, Prop}
 
+import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -88,7 +89,6 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
       /*
       Here you execute the command on the model. Please pay attention: The model has to be
       immutable. You cannot modify the variables of the model directly; instead, you need to use
@@ -118,8 +118,8 @@ object MessageBoardSpecification extends Commands {
       // R6 -> get a list of all possible messages
       // R7 -> search for messages
       // R8 -> reporting
-      // R9 -> unsuccessful requests //TODO
-      // R10 -> handling of unsuccessful requests // TODO implement this here
+      // R9 -> unsuccessful requests //TODO?
+      // R10 -> handling of unsuccessful requests // TODO implement this here?
       // R11 -> handling of likes/dislikes
       // R12 -> remove of a like
       // R13 -> like/dislike
@@ -133,9 +133,6 @@ object MessageBoardSpecification extends Commands {
 
       val messages = ModelUserMessage(author, message, Nil, Nil, collection.mutable.Map(), 0) :: state.messages
       state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
-
-
-      //state
     }
 
     override def preCondition(state: State): Boolean = true
@@ -144,7 +141,6 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        // TODO
         /*
         Here you need to check if the behaviour of the SUT and the model is the same. Please pay attention:
         The state passed as the argument is the state before the invocation of nextState(),
@@ -172,13 +168,77 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new RetrieveMessages(message, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val msgID = res.messages.asScala.find(msg => msg.getMessage == message).orNull.getMessageId
+
+      worker.tell(new Reaction(rName, sut.getCommId, msgID, reactionType))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res1 = sut.getClient.receivedMessages.remove() //.asInstanceOf[FoundMessages]
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      //R2 more than USER BLOCKED AT COUNT (=5)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
+      if (num_reports > USER_BLOCKED_AT_COUNT) {
+        return state.copy(lastCommandSuccessful = false, userBanned = true)
+      }
+
+      // R4 In order to  react to or delete a message, the message must exist
+      val exists = state.messages.exists(m => (m.message == message && m.author == author))
+      if(!exists) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      // R14 A message can get more than one reaction from a user, but all reactions to a message from
+      // the same user should be different (set semantics).
+      val equal_reaction_exists = state.messages.exists(m => ((m.message == message && m.author == author)
+        && m.reactions.exists(reaction => (reaction._1 == rName && reaction._2 == reactionType))))
+      if(equal_reaction_exists) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+
+      val messages = state.messages.map(
+        msg => {
+          if (msg.message == message && msg.author == author) {
+            if(msg.reactions.get(rName) != null){
+              val cloned_reactions = msg.reactions.clone()
+              val cloned_reactions_of_rName = msg.reactions(rName).clone()
+              // TODO!!!
+              cloned_reactions = cloned_reactions.put(rName, cloned_reactions_of_rName.clone() += reactionType)
+              msg.copy(reactions = cloned_reactions.clone())
+            }
+            else {
+              msg.copy( reactions = (msg.reactions.clone().put(rName, collection.mutable.Set[Reaction.Emoji](reactionType))))
+            }
+          } else {
+            msg
+          }
+        }
+      )
+      state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -187,8 +247,12 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
-        false // TODO
+        if(reply.isInstanceOf[ReactionResponse] && newState.lastCommandSuccessful)  true
+
+        false
       } else {
+        val reply: Message = result.get
+        //if(reply.isInstanceOf[OperationFailed] && !newState.lastCommandSuccessful)  true
         false
       }
     }
@@ -221,7 +285,7 @@ object MessageBoardSpecification extends Commands {
 
       val msgID = res.messages.asScala.find(msg => msg.getMessage == message).orNull.getMessageId
 
-      worker.tell(new Like(message, sut.getCommId, msgID))
+      worker.tell(new Like(likeName, sut.getCommId, msgID))
       while (sut.getClient.receivedMessages.isEmpty) {
         sut.getSystem.runFor(1)
       }
@@ -237,8 +301,34 @@ object MessageBoardSpecification extends Commands {
     }
 
     def nextState(state: State): State = {
-      // TODO
-      state
+      // R4 In order to like/dislike edit, react to or delete a message, the message must exist.
+      val exists = state.messages.exists(m => (m.message == message && m.author == author))
+      if (!exists) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      // R5 A message may only be liked/disliked by users who have not yet liked/disliked the correspon-
+      //ding message.
+      val already_liked = state.messages.exists(m => ((m.message == message) &&
+         m.likes.contains(likeName)))
+      if (already_liked) {
+        return state.copy(lastCommandSuccessful = false)
+      }
+
+      val messages = state.messages.map (
+        msg => {
+          // TODO continue whats the problem here??
+          if(msg.message == message && msg.author == author){
+            msg.copy(likes = msg.likes:+likeName,
+                    points = msg.points + 2 )
+          }
+          else {
+            message
+          }
+        }
+      )
+
+      state.copy(messages = messages, lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
@@ -247,6 +337,8 @@ object MessageBoardSpecification extends Commands {
       if (result.isSuccess) {
         val reply: Message = result.get
         val newState: State = nextState(state)
+        // f the system replies with ReactionResponse, the SUT
+        //was successful.
         false // TODO !!! impl right rule
       } else {
         false
