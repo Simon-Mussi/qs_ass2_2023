@@ -417,8 +417,27 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new Report(reporter, sut.getCommId, reported))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+
+      val res = sut.getClient.receivedMessages.remove()
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res
     }
 
     def nextState(state: State): State = {
@@ -471,7 +490,7 @@ object MessageBoardSpecification extends Commands {
       }
       val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
 
-      val notSuccessful = res.messages.isEmpty()
+      val notSuccessful = res.messages.isEmpty
       val messages = {
         if(notSuccessful) Nil
         else res.messages.asScala.map(m => m.getMessage).toList
@@ -602,8 +621,35 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new RetrieveMessages(author, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val msgID = res.messages.asScala.find(msg => msg.getMessage == oldMessage).orNull.getMessageId
+
+      worker.tell(new Edit(msgID, author, newMessage, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+
+      val res1 = sut.getClient.receivedMessages.remove()
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
@@ -635,8 +681,35 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new SearchMessages(message, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val msgID = res.messages.asScala.find(msg => msg.getMessage == message).orNull.getMessageId
+
+      worker.tell(new RemoveLikeOrDislike(author, sut.getCommId, msgID, removeType.asInstanceOf[RemoveLikeOrDislike.Type]))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+
+      val res1 = sut.getClient.receivedMessages.remove()
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
@@ -668,8 +741,34 @@ object MessageBoardSpecification extends Commands {
     type Result = Message
 
     def run(sut: Sut): Result = {
-      // TODO
-      throw new java.lang.UnsupportedOperationException("Not implemented yet.")
+      sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+      val worker: SimulatedActor = initAck.worker
+
+      worker.tell(new RetrieveMessages(message, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res = sut.getClient.receivedMessages.remove().asInstanceOf[FoundMessages]
+
+      val msgID = res.messages.asScala.find(msg => msg.getMessage == message).orNull.getMessageId
+
+      worker.tell(new Delete(msgID, deletingUser, sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty) {
+        sut.getSystem.runFor(1)
+      }
+      val res1 = sut.getClient.receivedMessages.remove() //.asInstanceOf[FoundMessages]
+
+      worker.tell(new FinishCommunication(sut.getCommId))
+      while (sut.getClient.receivedMessages.isEmpty == true) {
+        sut.getSystem.runFor(1)
+      }
+      sut.getClient.receivedMessages.remove()
+
+      res1
     }
 
     def nextState(state: State): State = {
