@@ -487,7 +487,7 @@ object MessageBoardSpecification extends Commands {
 
     def nextState(state: State): State = {
       //R2 more than USER BLOCKED AT COUNT (=5)
-      val num_reports = state.reports.count(report => report.reportedClientName)
+      val num_reports = state.reports.count(report => report.reportedClientName == reporter)
       if (num_reports > USER_BLOCKED_AT_COUNT) {
         return state.copy(lastCommandSuccessful = false, userBanned = true)
       }
@@ -711,7 +711,7 @@ object MessageBoardSpecification extends Commands {
 
     def nextState(state: State): State = {
       //R2 more than USER BLOCKED AT COUNT (=5)
-      val num_reports = state.reports.count(report => report.reportedClientName)
+      val num_reports = state.reports.count(report => report.reportedClientName == author)
       if (num_reports > USER_BLOCKED_AT_COUNT) {
         return state.copy(lastCommandSuccessful = false, userBanned = true)
       }
@@ -723,12 +723,12 @@ object MessageBoardSpecification extends Commands {
       }
 
       //R16 Only the author of a message, who published it, is able to edit it.
-      val msgFromAuthor = state.messages.find(msg => (msg.message == oldMessag && msg.author == author))
+      val msgFromAuthor = state.messages.find(msg => (msg.message == oldMessage && msg.author == author))
       if (msgFromAuthor == None) {
         return state.copy(lastCommandSuccessful = false)
       }
 
-      state.copy(lastCommandSuccessful = true, userBanned = false, reports = reportsVal)
+      state.copy(lastCommandSuccessful = true, userBanned = false)
     }
 
     override def preCondition(state: State): Boolean = true
