@@ -47,6 +47,42 @@ class MessageBoardProperties extends Properties("MessageBoardProperties") {
   }
   // TODO: add another properties for requirements R1-R16
 
+  property("Message length: Edit + Ack [R1] ") = forAll { (author: String, new_message: String) =>
+    // arrange-  initialize the message board
+    val sut = new SUTMessageBoard
+    sut.getDispatcher.tell(new InitCommunication(sut.getClient, sut.getCommId))
+    while (sut.getClient.receivedMessages.isEmpty)
+      sut.getSystem.runFor(1)
+    val initAck = sut.getClient.receivedMessages.remove.asInstanceOf[InitAck]
+    val worker: SimulatedActor = initAck.worker
+
+    // act - send and receive the messages
+    val old_message = "test"
+    val msg = new UserMessage(author, old_message)
+    worker.tell(new Publish(msg, sut.getCommId))
+    while (sut.getClient.receivedMessages.isEmpty)
+      sut.getSystem.runFor(1)
+    sut.getClient.receivedMessages.remove()
+
+    worker.tell(new Edit(msg.getMessageId, author, new_message, sut.getCommId))
+    while (sut.getClient.receivedMessages.isEmpty)
+      sut.getSystem.runFor(1)
+    val reply_edit = sut.getClient.receivedMessages.remove()
+
+    worker.tell(new FinishCommunication(sut.getCommId))
+    while (sut.getClient.receivedMessages.isEmpty)
+      sut.getSystem.runFor(1)
+    val fin = sut.getClient.receivedMessages.remove.asInstanceOf[FinishAck]
+
+    // assert - define your property and check against it
+    // The following classify is optional, it prints stats on the generated values.
+    // But the check inside is required.
+    classify(new_message.length <= MAX_MESSAGE_LENGTH, "valid message length", "invalid message length") {
+      // if operationAck is received, the message length should be smaller or equal to 10
+      reply_edit.isInstanceOf[OperationAck] == new_message.length <= MAX_MESSAGE_LENGTH && !(new_message == old_message)
+    }
+  }
+
   property("user blocked after USER_BLOCKED_AT_COUNT reports: Publish + Ack [R2]") = forAll(Gen.alphaStr, validMessageGen) { (author: String, message: String) =>
     // arrange - initialize the message board
     val sut = new SUTMessageBoard
